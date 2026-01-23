@@ -31,42 +31,49 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           set -e
-
           echo "🚀 Starting deployment..."
 
-          # Ensure PATH includes composer
           export PATH="$HOME/bin:/usr/local/bin:$PATH"
-
-          # Navigate to project
           cd ${{ secrets.SERVER_PATH }}
           git config --global --add safe.directory ${{ secrets.SERVER_PATH }}
 
-          # Pull latest code
-          echo "📥 Pulling latest code..."
-          git pull origin main --allow-unrelated-histories --no-ff
+          # Проверяем статус репозитория
+          echo "🔍 Checking repository status..."
 
-          # Install/Update dependencies
+          # Сбрасываем все незакоммиченные изменения
+          echo "🧹 Cleaning local changes..."
+          git reset --hard HEAD
+          git clean -fd
+
+          # Принудительно обновляем до origin/main
+          echo "📥 Updating code..."
+          git fetch origin main
+          git reset --hard origin/main
+
+          # Убедимся что мы на правильной ветке
+          git checkout main 2>/dev/null || git checkout -b main --track origin/main
+
+          # Обновляем submodules если есть
+          git submodule update --init --recursive
+
+          # Дальше ваш обычный deployment
           echo "📦 Installing dependencies..."
-          composer install --no-dev --optimize-autoloader
+          composer install --no-dev --optimize-autoloader --no-interaction
 
-          # Run migrations
           echo "🗄️ Running migrations..."
           php artisan migrate --force
 
-          # Clear old cache
           echo "🧹 Clearing cache..."
           php artisan cache:clear
           php artisan config:clear
           php artisan route:clear
           php artisan view:clear
 
-          # Optimize for production
           echo "⚡ Optimizing..."
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
 
-          # Fix permissions
           echo "🔒 Setting permissions..."
           chmod -R 755 storage bootstrap/cache
 
