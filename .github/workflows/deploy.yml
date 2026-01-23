@@ -1,0 +1,73 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP 8.1
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mbstring, xml, bcmath, mysql, curl, zip, gd, intl, fileinfo
+        tools: composer:v2
+
+    - name: Install Composer dependencies
+      run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+
+          echo "🚀 Starting deployment..."
+
+          # Ensure PATH includes composer
+          export PATH="$HOME/bin:/usr/local/bin:$PATH"
+
+          # Navigate to project
+          cd ${{ secrets.SERVER_PATH }}
+          git config --global --add safe.directory ${{ secrets.SERVER_PATH }}
+
+          # Pull latest code
+          echo "📥 Pulling latest code..."
+          git pull --ff-only origin main
+
+          # Install/Update dependencies
+          echo "📦 Installing dependencies..."
+          composer install --no-dev --optimize-autoloader
+
+          # Run migrations
+          echo "🗄️ Running migrations..."
+          php artisan migrate --force
+
+          # Clear old cache
+          echo "🧹 Clearing cache..."
+          php artisan cache:clear
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+
+          # Optimize for production
+          echo "⚡ Optimizing..."
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+          # Fix permissions
+          echo "🔒 Setting permissions..."
+          chmod -R 755 storage bootstrap/cache
+
+          echo "✅ Deployment completed successfully!"
