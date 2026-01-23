@@ -43,7 +43,7 @@ jobs:
 
           # Pull latest code
           echo "📥 Pulling latest code..."
-          git pull origin main --no-ff
+          git pull origin main --allow-unrelated-histories --no-ff
 
           # Install/Update dependencies
           echo "📦 Installing dependencies..."
