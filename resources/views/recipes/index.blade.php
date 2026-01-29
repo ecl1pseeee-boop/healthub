@@ -2,273 +2,390 @@
 
 @section('title', 'Рецепты - Кулинарная книга')
 
-@section('meta-description', 'Коллекция вкусных рецептов на любой вкус. Простые и сложные рецепты с пошаговыми инструкциями.')
-
 @section('content')
     <div class="container py-5">
         <!-- Заголовок и кнопка создания -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-5">
             <div>
-                <h1 class="h2 mb-2">🍳 Все рецепты</h1>
+                <h1 class="display-5 fw-bold mb-2">Все рецепты</h1>
+                <p class="text-muted mb-0">
+                    @if(request()->has('search'))
+                        Результаты поиска "{{ request('search') }}"
+                    @endif
+                </p>
             </div>
 
             @auth
-                <a href="{{ route('recipes.create') }}" class="btn btn-primary">
+                <a href="{{ route('recipes.create') }}" class="btn btn-primary btn-lg shadow-sm">
                     <i class="bi bi-plus-circle me-2"></i>Добавить рецепт
                 </a>
             @endauth
         </div>
 
-        <!-- Фильтры и поиск -->
-        <div class="card mb-4">
-            <div class="card-body">
+        <!-- Поиск и фильтры -->
+        <div class="card shadow-sm mb-5 border-0">
+            <div class="card-body p-4">
                 <form action="{{ route('recipes.index') }}" method="GET" class="row g-3">
-                    <div class="col-md-4">
-                        <label for="search" class="form-label">Поиск</label>
+                    <div class="col-md-6">
                         <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
                             <input type="text"
-                                   class="form-control"
-                                   id="search"
                                    name="search"
-                                   placeholder="Название или ингредиенты..."
+                                   class="form-control border-start-0"
+                                   placeholder="Поиск рецептов..."
                                    value="{{ request('search') }}">
-                            <button class="btn btn-outline-secondary" type="submit">
-                                <i class="bi bi-search"></i>
-                            </button>
                         </div>
                     </div>
 
-
                     <div class="col-md-3">
-                        <label for="difficulty" class="form-label">Сложность</label>
-                        <select class="form-select" id="difficulty" name="difficulty">
-                            <option value="">Любая</option>
-                            <option value="easy" {{ request('difficulty') == 'easy' ? 'selected' : '' }}>Легкая</option>
-                            <option value="medium" {{ request('difficulty') == 'medium' ? 'selected' : '' }}>Средняя</option>
-                            <option value="hard" {{ request('difficulty') == 'hard' ? 'selected' : '' }}>Сложная</option>
+                        <select name="difficulty" class="form-select">
+                            <option value="">Все уровни сложности</option>
+                            <option value="easy" {{ request('difficulty') == 'easy' ? 'selected' : '' }}>Легкий</option>
+                            <option value="medium" {{ request('difficulty') == 'medium' ? 'selected' : '' }}>Средний</option>
+                            <option value="hard" {{ request('difficulty') == 'hard' ? 'selected' : '' }}>Сложный</option>
                         </select>
                     </div>
 
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-outline-primary w-100">
-                            Применить
-                        </button>
+                    <div class="col-md-3">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-funnel me-2"></i>Применить
+                            </button>
+                            <a href="{{ route('recipes.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </div>
                     </div>
                 </form>
 
                 <!-- Быстрые фильтры -->
-                <div class="mt-3">
-                    <div class="btn-group" role="group">
-                        <a href="{{ route('recipes.index', ['sort' => 'latest']) }}"
-                           class="btn btn-sm btn-outline-secondary {{ request('sort') == 'latest' ? 'active' : '' }}">
-                            Новые
-                        </a>
-                        <a href="{{ route('recipes.index', ['sort' => 'popular']) }}"
-                           class="btn btn-sm btn-outline-secondary {{ request('sort') == 'popular' ? 'active' : '' }}">
-                            Популярные
-                        </a>
-                        <a href="{{ route('recipes.index', ['vegetarian' => 1]) }}"
-                           class="btn btn-sm btn-outline-success {{ request('vegetarian') ? 'active' : '' }}">
-                            Вегетарианские
-                        </a>
-                        <a href="{{ route('recipes.index', ['quick' => 1]) }}"
-                           class="btn btn-sm btn-outline-warning {{ request('quick') ? 'active' : '' }}">
-                            Быстрые
-                        </a>
-                    </div>
+                <div class="mt-3 d-flex flex-wrap gap-2">
+                    <a href="{{ route('recipes.index', ['difficulty' => 'easy']) }}"
+                       class="badge bg-success bg-opacity-10 text-success text-decoration-none py-2 px-3">
+                        <i class="bi bi-emoji-smile me-1"></i>Легкие
+                    </a>
+                    <a href="{{ route('recipes.index', ['is_vegan' => true]) }}"
+                       class="badge bg-info bg-opacity-10 text-info text-decoration-none py-2 px-3">
+                        <i class="bi bi-tree me-1"></i>Вегетарианские
+                    </a>
+                    <a href="{{ route('recipes.index', ['sort' => 'views']) }}"
+                       class="badge bg-warning bg-opacity-10 text-warning text-decoration-none py-2 px-3">
+                        <i class="bi bi-fire me-1"></i>Популярные
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Сообщения об успехе -->
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
         <!-- Сетка рецептов -->
         @if($recipes->count() > 0)
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
                 @foreach($recipes as $recipe)
                     <div class="col">
-                        <div class="card h-100 recipe-card">
-                            <!-- Бейджы -->
-                            <div class="position-absolute top-0 start-0 p-3">
-                                @if($recipe->is_featured)
-                                    <span class="badge bg-warning">⭐ Избранное</span>
-                                @endif
-                                @if($recipe->is_vegetarian)
-                                    <span class="badge bg-success">🌿 Вегетарианское</span>
-                                @endif
-                            </div>
-
-                            <!-- Изображение -->
-                            <div class="card-img-top position-relative" style="height: 200px; overflow: hidden;">
+                        <div class="card h-100 recipe-card border-0 shadow-sm hover-shadow">
+                            <!-- Изображение рецепта -->
+                            <div class="position-relative">
                                 @if($recipe->image_path)
                                     <img src="{{ $recipe->full_image_url }}"
+                                         class="card-img-top recipe-image"
                                          alt="{{ $recipe->title }}"
-                                         class="img-fluid w-100 h-100 object-fit-cover">
+                                         style="height: 200px; object-fit: cover;">
                                 @else
-                                    <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
-                                        <i class="bi bi-image display-4"></i>
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                         style="height: 200px;">
+                                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
                                     </div>
                                 @endif
 
-                                <!-- Сложность -->
-                                <div class="position-absolute bottom-0 end-0 m-2">
-                                <span class="badge bg-{{ $recipe->difficulty == 'easy' ? 'success' : ($recipe->difficulty == 'medium' ? 'warning' : 'danger') }}">
-                                    {{ $recipe->difficulty == 'easy' ? 'Легко' : ($recipe->difficulty == 'medium' ? 'Средне' : 'Сложно') }}
-                                </span>
+                                <!-- Бейджи на изображении -->
+                                <div class="position-absolute top-0 start-0 p-3">
+                                    <span class="badge bg-{{ $recipe->difficulty == 'easy' ? 'success' : ($recipe->difficulty == 'medium' ? 'warning' : 'danger') }}">
+                                        {{ $recipe->difficulty == 'easy' ? 'Легко' : ($recipe->difficulty == 'medium' ? 'Средне' : 'Сложно') }}
+                                    </span>
                                 </div>
+
+                                @if($recipe->is_vegan)
+                                    <div class="position-absolute top-0 end-0 p-3">
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-tree me-1"></i>Веган
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Тело карточки -->
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">
-                                    <a href="{{ route('recipes.show', $recipe->slug) }}"
-                                       class="text-decoration-none text-dark">
-                                        {{ $recipe->title }}
+                                <h5 class="card-title mb-2">
+                                    <a href="{{ route('recipes.show', $recipe) }}"
+                                       class="text-dark text-decoration-none stretched-link">
+                                        {{ Str::limit($recipe->title, 40) }}
                                     </a>
                                 </h5>
 
-                                <p class="card-text text-muted small mb-3">
-                                    {{ Str::limit($recipe->excerpt, 100) }}
+                                <p class="card-text text-muted small mb-3 flex-grow-1">
+                                    {{ Str::limit($recipe->description, 100) }}
                                 </p>
 
                                 <!-- Мета-информация -->
-                                <div class="mt-auto">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <small class="text-muted">
-                                            <i class="bi bi-clock me-1"></i>
+                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                    <div class="d-flex gap-3 text-muted small">
+                                        <span class="d-flex align-items-center gap-1">
+                                            <i class="bi bi-clock"></i>
                                             {{ $recipe->total_time }} мин
-                                        </small>
-                                        <small class="text-muted">
-                                            <i class="bi bi-people me-1"></i>
-                                            {{ $recipe->servings }} порций
-                                        </small>
+                                        </span>
+                                        <span class="d-flex align-items-center gap-1">
+                                            <i class="bi bi-people"></i>
+                                            {{ $recipe->servings }} порц.
+                                        </span>
                                     </div>
 
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center">
+                                    <div class="text-muted small">
+                                        <i class="bi bi-eye me-1"></i>{{ $recipe->views_count }}
+                                    </div>
+                                </div>
+
+                                <!-- Автор и дата -->
+                                <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-2">
                                             @if($recipe->user->avatar)
-                                                <img src="{{ $recipe->user->avatar_url }}"
-                                                     alt="{{ $recipe->user->name }}"
-                                                     class="rounded-circle me-2"
-                                                     style="width: 24px; height: 24px;">
+                                                <img src="{{ asset('storage/' . $recipe->user->avatar) }}"
+                                                     class="rounded-circle"
+                                                     width="32"
+                                                     height="32"
+                                                     alt="{{ $recipe->user->name }}">
                                             @else
-                                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2"
-                                                     style="width: 24px; height: 24px; font-size: 12px;">
-                                                    {{ Str::upper(Str::substr($recipe->user->name, 0, 1)) }}
+                                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                                                     style="width: 32px; height: 32px;">
+                                                    {{ Str::substr($recipe->user->name, 0, 1) }}
                                                 </div>
                                             @endif
-                                            <small>{{ $recipe->user->name }}</small>
                                         </div>
+                                        <div class="small">
+                                            <div class="fw-medium">{{ $recipe->user->name }}</div>
+                                            <div class="text-muted">
+                                                {{ $recipe->published_at?->diffForHumans() ?? $recipe->created_at->diffForHumans() }}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                        <div class="text-muted">
-                                            <i class="bi bi-eye me-1"></i>{{ $recipe->views_count }}
-                                            <i class="bi bi-heart ms-2 me-1"></i>{{ $recipe->likes_count }}
-                                            <i class="bi bi-star ms-2 me-1"></i>{{ number_format($recipe->rating, 1) }}
-                                        </div>
+                                    <!-- Рейтинг -->
+                                    <div class="text-warning">
+                                        @php
+                                            $totalVotes = $recipe->rate_likes_count + $recipe->rate_medium_count + $recipe->rate_dislikes_count;
+                                            $averageRating = $totalVotes > 0
+                                                ? ($recipe->rate_likes_count * 5 + $recipe->rate_medium_count * 3) / $totalVotes
+                                                : 0;
+                                        @endphp
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <i class="bi bi-star{{ $i <= round($averageRating / 5 * 5) ? '-fill' : '' }}"></i>
+                                        @endfor
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Футер карточки -->
-                            <div class="card-footer bg-transparent border-top-0 pt-0">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        {{ $recipe->created_at->diffForHumans() }}
-                                    </small>
+                            <!-- Футер карточки (действия) -->
+                            @auth
+                                <div class="card-footer bg-transparent border-top-0 pt-0">
+                                    <div class="d-flex justify-content-between">
+                                        @if(auth()->id() == $recipe->user_id)
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ route('recipes.edit', $recipe) }}"
+                                                   class="btn btn-outline-primary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn-outline-danger"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#deleteModal{{ $recipe->id }}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        @else
+                                            <button class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-bookmark me-1"></i>В закладки
+                                            </button>
+                                        @endif
 
-                                    @if($recipe->category)
-                                        <a href="{{ route('categories.show', $recipe->category->slug) }}"
-                                           class="badge bg-light text-decoration-none text-dark">
-                                            {{ $recipe->category->name }}
-                                        </a>
-                                    @endif
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-outline-success like-btn"
+                                                    data-recipe-id="{{ $recipe->id }}"
+                                                    data-action="like">
+                                                <i class="bi bi-hand-thumbs-up"></i>
+                                                <span class="like-count">{{ $recipe->rate_likes_count }}</span>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning like-btn"
+                                                    data-recipe-id="{{ $recipe->id }}"
+                                                    data-action="medium">
+                                                <i class="bi bi-emoji-neutral"></i>
+                                                <span class="medium-count">{{ $recipe->rate_medium_count }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+
+                                <!-- Модальное окно удаления -->
+                                <div class="modal fade" id="deleteModal{{ $recipe->id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Подтверждение удаления</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Вы уверены, что хотите удалить рецепт "{{ $recipe->title }}"?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                <form action="{{ route('recipes.destroy', $recipe) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger">Удалить</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endauth
                         </div>
                     </div>
                 @endforeach
             </div>
 
             <!-- Пагинация -->
-            <div class="mt-5">
-                {{ $recipes->links() }}
-            </div>
+            @if($recipes->hasPages())
+                <div class="mt-5">
+                    {{ $recipes->withQueryString()->links() }}
+                </div>
+            @endif
         @else
-            <!-- Пустой список -->
+            <!-- Сообщение, если рецептов нет -->
             <div class="text-center py-5">
                 <div class="mb-4">
                     <i class="bi bi-emoji-frown display-1 text-muted"></i>
                 </div>
-                <h3 class="h4 mb-3">Рецепты не найдены</h3>
-                <a href="{{ route('recipes.index') }}" class="btn btn-outline-primary">
-                    Сбросить фильтры
-                </a>
+                <h4 class="mb-3">Рецепты не найдены</h4>
+                <p class="text-muted mb-4">
+                    @if(request()->has('search'))
+                        Попробуйте изменить параметры поиска
+                    @else
+                        Будьте первым, кто добавит рецепт!
+                    @endif
+                </p>
+                @auth
+                    <a href="{{ route('recipes.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Создать первый рецепт
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Войдите, чтобы добавить рецепт
+                    </a>
+                @endauth
             </div>
         @endif
     </div>
+@endsection
 
-    <!-- Стили для карточек -->
+@push('styles')
     <style>
         .recipe-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
         .recipe-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
         }
 
-        .recipe-card .card-img-top {
-            border-radius: 8px 8px 0 0;
+        .recipe-image {
+            transition: transform 0.5s ease;
         }
 
-        .object-fit-cover {
-            object-fit: cover;
+        .recipe-card:hover .recipe-image {
+            transform: scale(1.05);
         }
 
-        .pagination {
-            justify-content: center;
+        .avatar-sm {
+            width: 32px;
+            height: 32px;
         }
 
-        .badge {
-            font-weight: 500;
+        .like-btn.active {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+
+        .hover-shadow {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .stretched-link::after {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            content: "";
         }
     </style>
+@endpush
 
-    <!-- Скрипт для автосабмита фильтров -->
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Автосабмит при изменении select
-                const selects = ['category', 'difficulty'];
-                selects.forEach(function(id) {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.addEventListener('change', function() {
-                            this.form.submit();
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Обработка лайков
+            document.querySelectorAll('.like-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const recipeId = this.dataset.recipeId;
+                    const action = this.dataset.action;
+                    const button = this;
+
+                    // В реальном приложении здесь был бы AJAX запрос
+                    // fetch(`/recipes/${recipeId}/rate`, {
+                    //     method: 'POST',
+                    //     headers: {
+                    //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    //         'Content-Type': 'application/json'
+                    //     },
+                    //     body: JSON.stringify({ action: action })
+                    // })
+                    // .then(response => response.json())
+                    // .then(data => {
+                    //     if(data.success) {
+                    //         button.querySelector('span').textContent = data.count;
+                    //         button.classList.add('active');
+                    //     }
+                    // });
+
+                    // Демо-версия
+                    const countSpan = button.querySelector('span');
+                    let currentCount = parseInt(countSpan.textContent);
+                    countSpan.textContent = currentCount + 1;
+                    button.classList.add('active');
+
+                    // Убираем активный класс с других кнопок того же рецепта
+                    document.querySelectorAll(`.like-btn[data-recipe-id="${recipeId}"]`)
+                        .forEach(btn => {
+                            if(btn !== button) {
+                                btn.classList.remove('active');
+                            }
                         });
-                    }
                 });
-
-                // Подсветка активных фильтров
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.toString()) {
-                    document.querySelectorAll('.btn-group .btn').forEach(btn => {
-                        if (btn.classList.contains('active')) {
-                            btn.classList.remove('btn-outline-secondary');
-                            btn.classList.add('btn-primary');
-                        }
-                    });
-                }
             });
-        </script>
-    @endpush
-@endsection
+
+            // Фильтрация при изменении селектов
+            document.querySelectorAll('select[name="difficulty"], select[name="category"]').forEach(select => {
+                select.addEventListener('change', function() {
+                    this.form.submit();
+                });
+            });
+        });
+    </script>
+@endpush
